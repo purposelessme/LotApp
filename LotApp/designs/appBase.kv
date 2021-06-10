@@ -1,0 +1,300 @@
+#:import CollectionPopUp ui.collectionpopup.CollectionPopUp
+#:import LotPaper ui.lotpaper.LotPaper
+#:import LotViewer ui.lotviewer.LotViewer
+#:import Db logics.db.Db
+#:import Window kivy.core.window.Window
+
+#:set cPop CollectionPopUp()
+
+AppManager:
+
+<AppManager>:
+    id:sm
+    Home:
+    Collection:
+    LotSpace:
+
+
+<Home>:
+    name:"home"
+    BoxLayout:
+        orientation:"vertical"
+        canvas:
+            Color:
+                rgba:[1,1,0,0.5]
+            Rectangle:
+                size:self.size
+                pos:self.pos
+        ToolBar:
+            back:"assets/quitWhite.png"
+        Label:
+            size_hint:1,0.1
+        ScrollView:
+            size_hint:0.9,1
+            pos_hint:{"center_x":0.5,"center_y":0.5}
+            canvas.before:
+                Color:
+                    rgba:[1,1,0,1]
+                Rectangle:
+                    size:self.size
+                    pos:self.pos
+            GridLayout:
+                id:collectionGrid
+                cols:7
+                size_hint:1,None
+                height:self.minimum_height
+                col_force_default:True
+                row_force_default:True
+                col_default_width:root.width*0.1
+                row_default_height:root.height*0.05
+                spacing:10
+                padding:[20,20,20,20]
+                Button:
+                    text:"new collection"
+                    on_press:
+                        cPop.open()
+        Label:
+            size_hint:1,0.1
+
+
+<Collection>:
+    name:"collection"
+    BoxLayout:
+        orientation:"vertical"
+        canvas:
+            Color:
+                rgba:[1,0,1,0.5]
+            Rectangle:
+                size:self.size
+                pos:self.pos
+        ToolBar:
+        Label:
+            size_hint:1,0.1
+        GridLayout:
+            id:lotsGrid
+            cols:7
+            col_force_default:True
+            row_force_default:True
+            col_default_width:root.width*0.1
+            row_default_height:root.height*0.05
+            size_hint:0.9,1
+            pos_hint:{"center_x":0.5,"center_y":0.5}
+            spacing:10
+            padding:[20,20,20,20]
+            canvas:
+                Color:
+                    rgba:[1,0,1,1]
+                Rectangle:
+                    size:self.size
+                    pos:self.pos
+            Button:
+                text:"new lot"
+                on_press:
+                    cPop.open()
+        Label:
+            size_hint:1,0.1
+
+<LotSpace>:
+    name:"lotScreen"
+    BoxLayout:
+        orientation:"vertical"
+        canvas:
+            Color:
+                rgba:[0.55,0.07,0.64,1]
+            Rectangle:
+                size:self.size
+                pos:self.pos
+        ToolBar:
+            ToggleButton:
+                id:sidebar
+                text:"collapse"
+                size_hint:0.05,1
+                pos_hint:{"center_x":0.975,"center_y":0.5}
+                state:"down"
+                on_state:
+                    self.text = "collapse" if self.state=="down" else "expand"
+        BoxLayout:
+            BoxLayout:
+                BoxLayout:
+                    orientation:"vertical"
+                    BoxLayout:
+                        size_hint:1,0.05
+                        canvas:
+                            Color:
+                                rgba:[.8,.5,.9,1]
+                            Rectangle:
+                                size:self.size
+                                pos:self.pos
+                        Label:
+                            id:lotName
+                        ToggleButton:
+                            id:condition
+                            text:"add to selected"
+                            state:"down"
+                            on_state:
+                                self.text = "add to selected" if self.state=="down" else "add to removed"
+                                Db.add_condition(self.state,app.cur_lot,app.cur_collection)
+                        Button:
+                            text:"shuffle"
+                            on_press:
+                                root.shuffle()
+                    GridLayout:
+                        id:lotGrid
+                        cols:7
+                        col_force_default:True
+                        row_force_default:True
+                        col_default_width:root.width*0.1
+                        row_default_height:root.width*0.1
+                        spacing:10
+                        padding:[10,10,10,10]
+                Accordion:
+                    orientation:"vertical"
+                    id:sideBox
+                    size_hint:(0.30,1) if sidebar.state == "down" else (0,0)
+                    AccordionItem:
+                        title:"participants list"
+                        BoxLayout:
+                            orientation:"vertical"
+                            BoxLayout:
+                                size_hint:1,0.05
+                                TextInput:
+                                    id:participant
+                                    multiline:False
+                                Button:
+                                    text:"+"
+                                    bold:True
+                                    size_hint:0.15,1
+                                    on_press:
+                                        Db.add_participant(participant.text,app.cur_lot,app.cur_collection) if participant.text!="" else None
+                                        participant.text = ""
+                                        root.participant_grid()
+                                        root.participant_list()
+                                Button:
+                                    text:"-"
+                                    bold:True
+                                    size_hint:0.15,1
+                                    on_press:
+                                        Db.remove_participant(participant.text,app.cur_lot,app.cur_collection) if participant.text!="" else None
+                                        participant.text = ""
+                                        root.participant_grid()
+                                        root.participant_list()
+                            ScrollView:
+                                bar_width:10
+                                bar_inactive_color:[0,0,1,1]
+                                bar_color:[1,0,0,1]
+                                canvas.before:
+                                    Color:
+                                        rgba:[.2,.5,.8,.9]
+                                    Rectangle:
+                                        size:self.size
+                                        pos:self.pos
+                                Label:
+                                    id:participants
+                                    size_hint:1,None
+                                    height:self.texture_size[1]
+                    AccordionItem:
+                        title:"selected numbers"
+                        GridLayout:
+                            id:selected_numbers
+                            cols:4
+                            col_force_default:True
+                            row_force_default:True
+                            col_default_width:self.width*0.2
+                            row_default_height:self.width*0.2
+                            spacing:10
+                            padding:[10,10,10,10]
+                            canvas:
+                                Color:
+                                    rgba:[1,0.66,0,1]
+                                Rectangle:
+                                    size:self.size
+                                    pos:self.pos
+                    AccordionItem:
+                        title:"results"
+                        id:resultsItem
+                        GridLayout:
+                            id:resultsGrid
+                            cols:4
+                            col_force_default:True
+                            row_force_default:True
+                            col_default_width:self.width*0.2
+                            row_default_height:self.width*0.2
+                            spacing:10
+                            padding:[10,10,10,10]
+                            canvas:
+                                Color:
+                                    rgba:[0.8,0.1,0.4,1]
+                                Rectangle:
+                                    size:self.size
+                                    pos:self.pos
+                    AccordionItem:
+                        title:"options"
+                        id:optionsItem
+                        BoxLayout:
+                            orientation:"vertical"
+                            padding:[10,10,10,10]
+                            spacing:10
+                            canvas:
+                                Color:
+                                    rgba:[0.1,0.8,0.3,1]
+                                Rectangle:
+                                    size:self.size
+                                    pos:self.pos
+                            ToggleButton:
+                                id:privacy
+                                text:"reveal" if self.state=="normal" else "hide"
+                                size_hint:1,0.05
+                                on_state:
+                                    root.privacy = self.state
+                            Button:
+                                text:"open selected numbers"
+                                size_hint:1,0.05
+                                on_press:
+                                    optionsItem.collapse = True
+                                    resultsItem.collapse = False
+                                    app.results_list.clear()
+                                    LotViewer(app.selected_numbers,root.shuffled_list)
+                            Label:
+
+
+<ToolBar@FloatLayout>:
+    back:"assets/backWhite.png"
+    size_hint:1,0.025
+    pos_hint:{"center_x":0.5,"center_y":0.975}
+    canvas:
+        Color:
+            rgba:[1,0,0.41,1]
+        Rectangle:
+            size:self.size
+            pos:self.pos
+    Button:
+        id:btn
+        size_hint:None,1
+        width:root.size[1]
+        pos_hint:{"center_x":0.025,"center_y":0.5}
+        background_normal:"assets/transparent.png"
+        background_down:"assets/transparent.png"
+        on_press:
+            app.back()
+        Image:
+            source:root.back
+            size:self.parent.size
+            pos:self.parent.pos
+            allow_stretch: True
+    ToggleButton:
+        size_hint:None,1
+        width:root.size[1]
+        pos_hint:{"center_x":0.975,"center_y":0.5}
+        on_press:
+            app.change_full_screen(self.state)
+        background_normal:"assets/transparent.png"
+        background_down:"assets/transparent.png"
+        Image:
+            source:"assets/fullScreenWhite.png" if self.parent.state=="normal" else "assets/exitFullWhite.png"
+            size:self.parent.size
+            pos:self.parent.pos
+            allow_stretch: True
+
+<TextInput@TextInput>:
+    on_focus:
+        Window.unbind(on_key_down=app.on_back_btn) if self.focus==True else Window.bind(on_key_down=app.on_back_btn)
